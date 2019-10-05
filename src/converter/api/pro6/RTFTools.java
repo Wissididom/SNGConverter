@@ -28,7 +28,7 @@ public class RTFTools {
 	
 	public static String convertPlainTextToRtf(String plainText, AttributeSet attributeSet) throws IOException, BadLocationException {
 		RTFEditorKit editorKit = new RTFEditorKit();
-		return convertPlainTextToRtf(plainText, editorKit, editorKit.createDefaultDocument(), null);
+		return convertPlainTextToRtf(plainText, editorKit, editorKit.createDefaultDocument(), attributeSet);
 	}
 	
 	public static String convertPlainTextToRtf(String plainText, Document document, AttributeSet attributeSet) throws IOException, BadLocationException {

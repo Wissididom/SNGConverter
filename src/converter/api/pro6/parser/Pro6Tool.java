@@ -109,8 +109,13 @@ public class Pro6Tool {
 					SlideGroup p = new SlideGroup();
 					if (slideGroupObject.has("color"))
 						p.setColor(slideGroupObject.getString("color"));
-					if (slideGroupObject.has("name"))
-						p.setName(slideGroupObject.getString("name"));
+					if (slideGroupObject.has("name")) {
+						try {
+							p.setName(slideGroupObject.getString("name"));
+						} catch (JSONException ex) {
+							System.out.println("JSONObject[\"name\"] is not a string");
+						}
+					}
 					if (slideGroupObject.has("uuid"))
 						p.setUUID(slideGroupObject.getString("uuid"));
 					else if (slideGroupObject.has("UUID"))

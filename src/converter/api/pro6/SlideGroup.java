@@ -4,9 +4,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class SlideGroup {
-	private String color = null;
-	private String name = null;
-	private String uuid = null;
+	private String color = "0 0 0 0";
+	private String name = "";
+	private String uuid = "";
 	private List<Slide> slides = new ArrayList<Slide>();
 	
 	public SlideGroup() {}

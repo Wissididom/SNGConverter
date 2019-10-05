@@ -1,5 +1,6 @@
 package converter.api;
 
+import java.awt.Color;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -13,6 +14,9 @@ import java.time.ZoneId;
 import java.util.UUID;
 
 import javax.swing.text.BadLocationException;
+import javax.swing.text.MutableAttributeSet;
+import javax.swing.text.SimpleAttributeSet;
+import javax.swing.text.StyleConstants;
 
 import converter.api.pro6.Dictionary;
 import converter.api.pro6.NSColor;
@@ -67,7 +71,7 @@ public class ConverterAPI {
 	public static final String PRES = "170 85 255 255";
 	public static final String BRIDGE_MISC_INSTRUMENTAL_INTERLUDE = "204 0 0 255";
 	public static final String REFRAIN_CHORUS = "128 0 255 255";
-	public static final String CHOR_SOLO = "170 176 255";
+	public static final String CHOR_SOLO = "170 176 255 255";
 	
 	private static String getCurrentDateTime() {
 		// String time = Instant.now().atZone(ZoneId.of("Europe/Berlin")).toString();
@@ -105,20 +109,34 @@ public class ConverterAPI {
 	
 	public static SngFile convertPro6ToSng(Pro6File pro6File) throws IOException, BadLocationException {
 		SngFile sf = new SngFile();
-		sf.setProperty("Title", (String) pro6File.getProperty("CCLISongTitle").getPropertyValue());
-		sf.setProperty("(c)", ((String) pro6File.getProperty("CCLICopyrightYear").getPropertyValue() + " " + (String) pro6File.getProperty("CCLIPublisher").getPropertyValue()));
-		sf.setProperty("CCLI", ((Integer) pro6File.getProperty("CCLISongNumber").getPropertyValue()).toString());
-		sf.setProperty("Author", ((Integer) pro6File.getProperty("CCLIAuthor").getPropertyValue()).toString());
+		if (pro6File.containsProperty("CCLISongTitle"))
+			sf.setProperty("Title", (String) pro6File.getProperty("CCLISongTitle").getPropertyValue());
+		if (pro6File.containsProperty("CCLICopyrightYear")) {
+			if (pro6File.containsProperty("CCLIPublisher"))
+				sf.setProperty("(c)", ((String) pro6File.getProperty("CCLICopyrightYear").getPropertyValue() + " " + (String) pro6File.getProperty("CCLIPublisher").getPropertyValue()));
+			else
+				sf.setProperty("(c)", (String) pro6File.getProperty("CCLICopyrightYear").getPropertyValue());
+		} else {
+			if (pro6File.containsProperty("CCLIPublisher"))
+				sf.setProperty("(c)", (String) pro6File.getProperty("CCLIPublisher").getPropertyValue());
+		}
+		if (pro6File.containsProperty("CCLISongNumber"))
+			sf.setProperty("CCLI", pro6File.getProperty("CCLISongNumber").getPropertyValue().toString());
+		if (pro6File.containsProperty("CCLIAuthor"))
+			sf.setProperty("Author", pro6File.getProperty("CCLIAuthor").getPropertyValue().toString());
 		String slides = "";
 		SlideGroups groups = pro6File.getGroups();
 		for (SlideGroup group : groups.getGroups()) {
-			for (Slide slide : group.getSlides()) {
-				for (SlideElement element : slide.getElements().getElements()) {
+			for (int i = 0; i < group.getSlideCount(); i++) {
+				for (SlideElement element : group.getSlide(i).getElements().getElements()) {
 					NSString string = element.getString();
-					if (string.isDecoded())
+					if (!string.isDecoded())
 						string.decodeContent();
-					if (slides.length() < 1)
+					if (slides.length() > 0)
 						slides += "---\n";
+					String name = group.getName();
+					if (name != null && name.length() > 0)
+						slides += name + "\n";
 					slides += RTFTools.convertRtfToPlainText(string.getContent());
 				} 
 			}
@@ -152,7 +170,7 @@ public class ConverterAPI {
 		if (sngFile.containsProperty("Author"))
 			pf.setProperty("CCLIAuthor", sngFile.getProperty("Author").getPropertyValue());
 		pf.setProperty("buildNumber", 16245);
-		pf.setProperty("uuid", UUID.randomUUID().toString());
+		pf.setProperty("uuid", UUID.randomUUID().toString().toUpperCase());
 		pf.setProperty("lastDateUsed", ConverterAPI.getCurrentDateTime());
 		pf.setProperty("CCLIDisplay", true);
 		pf.setProperty("usedCount", 0);
@@ -179,13 +197,21 @@ public class ConverterAPI {
 		SlideGroup group = new SlideGroup();
 		for (int i = 0; i < slides.length; i++) {
 			Slide slideObj = new Slide("slides");
+			boolean hasName = false;
 			if (ConverterAPI.startsWithOneInArrayIgnoreCase(slides[i], ConverterAPI.AVAILABLE_VERSE_ORDER_ENTRIES)) {
 				group.setName(slides[i].split("\n")[0]);
 				group.setColor(ConverterAPI.getColor(slides[i].split("(?: |\n)")[0]));
-				group.setUUID(UUID.randomUUID().toString());
+				group.setUUID(UUID.randomUUID().toString().toUpperCase());
+				slides[i] = slides[i].substring(slides[i].indexOf('\n') + 1);
+				hasName = true;
 			}
-			NSString string = new NSString("RTFData", RTFTools.convertPlainTextToRtf(slides[i])).encodeContent();
-			Dictionary dic = new Dictionary();
+			MutableAttributeSet mas = new SimpleAttributeSet();
+			StyleConstants.setFontFamily(mas, "Helvetica");
+			StyleConstants.setFontSize(mas, 200);
+			StyleConstants.setForeground(mas, Color.WHITE);
+			StyleConstants.setBackground(mas, Color.BLACK);
+			NSString string = new NSString("RTFData", RTFTools.convertPlainTextToRtf(slides[i], mas)).encodeContent();
+			Dictionary dic = new Dictionary("stroke");
 			dic.addEntry(new NSColor("RVShapeElementStrokeColor", "0 0 0 0"));
 			dic.addEntry(new NSNumber("RVShapeElementStrokeWidth", 1.0D));
 			SlideElement element = new SlideElement("displayElements", "RVTextElement", new SlideShadow("shadow", "0.000000|0 0 0 0.3333333432674408|{4.0000002002606152, -3.9999995259110506}"), "TextElement", 0.0D, "", false, string, 0, "0 0 0 0", 0, false, false, 0, new RVRect3D("position", "{192 108 0 1536 864}"), UUID.randomUUID().toString(), false, false, 0.0D, false, 0.0D, 0.0D, false, true, false, false, dic, 1.0D, 0.0D, 1);
@@ -194,14 +220,16 @@ public class ConverterAPI {
 			slideObj.setProperty("backgroundColor", "0 0 0 1");
 			slideObj.setProperty("socialItemCount", 1);
 			slideObj.setProperty("drawingBackgroundColor", false);
-			slideObj.setProperty("UUID", UUID.randomUUID().toString());
+			slideObj.setProperty("UUID", UUID.randomUUID().toString().toUpperCase());
 			slideObj.setProperty("enabled", true);
-			if (i > 0 && !slides[i - 1].startsWith(slides[i].split("\n")[0])) {
+			group.addSlide(slideObj);
+			if (hasName) {
 				groups.addGroup(group);
 				group = new SlideGroup();
 			}
-			group.addSlide(slideObj);
 		}
+		if (groups.getGroupCount() < 1)
+			groups.addGroup(group);
 		pf.setGroups(groups);
 		return pf;
 	}
@@ -253,6 +281,6 @@ public class ConverterAPI {
 			return ConverterAPI.REFRAIN_CHORUS;
 		if (name.equalsIgnoreCase("Chor") || name.equalsIgnoreCase("Solo"))
 			return ConverterAPI.CHOR_SOLO;
-		return null;
+		return "0 0 0 0";
 	}
 }
