@@ -63,8 +63,8 @@ public class SlideGroup {
 		return this.slides.get(slideIndex);
 	}
 	
-	public SlideGroup setSlide(int slideIndex, Slide slides) {
-		this.slides.set(slideIndex, slides);
+	public SlideGroup setSlide(int slideIndex, Slide slide) {
+		this.slides.set(slideIndex, slide);
 		return this;
 	}
 	

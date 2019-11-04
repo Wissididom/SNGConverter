@@ -1,0 +1,1 @@
+https://stackoverflow.com/questions/4114989/encode-decode-rtf-data-with-php

@@ -1,12 +1,9 @@
 package converter.api.pro6.parser;
 
-import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 
 import javax.swing.text.BadLocationException;
@@ -16,6 +13,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.XML;
 
+import converter.api.ConverterAPI;
 import converter.api.pro6.Dictionary;
 import converter.api.pro6.FileProperty;
 import converter.api.pro6.NS;
@@ -35,22 +33,9 @@ import converter.api.pro6.SlideShadow;
 
 public class Pro6Tool {
 	
-	private static String readFile(File file) throws IOException {
-		BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(file)));
-		String inputLine = "", result = "";
-		while ((inputLine = br.readLine()) != null) {
-			if (result.length() < 1)
-				result = inputLine;
-			else
-				result += "\n" + inputLine;
-		}
-		br.close();
-		return result;
-	}
-	
 	public static Pro6File parsePro6(File pro6File) throws IOException {
-		String pro6Content = readFile(pro6File).replace("\uFEFF", ""); // remove BOM
-		return parsePro6(pro6Content);
+		String pro6Content = ConverterAPI.readFile(pro6File).replace("\uFEFF", ""); // remove BOM
+		return Pro6Tool.parsePro6(pro6Content);
 	}
 	
 	public static Pro6File parsePro6(String pro6Content) {
@@ -295,12 +280,12 @@ public class Pro6Tool {
 	}
 	
 	public static void generatePro6(Pro6File properties, String pro6FilePath) throws IOException {
-		generatePro6(properties, new File(pro6FilePath));
+		Pro6Tool.generatePro6(properties, new File(pro6FilePath));
 	}
 	
 	public static void generatePro6(Pro6File properties, File pro6File) throws IOException {
 		BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(pro6File)));
-		bw.write(generatePro6(properties));
+		bw.write(Pro6Tool.generatePro6(properties));
 		bw.flush();
 		bw.close();
 	}
@@ -439,9 +424,9 @@ public class Pro6Tool {
 	}
 	
 	public static void main(String[] args) throws IOException {
-		Pro6File pf = parsePro6(new File("/home/dominik/eclipse-workspace/Pro6Parser/src/files/example/Groß und herrlich.pro6"));
+		Pro6File pf = Pro6Tool.parsePro6(new File("/home/dominik/eclipse-workspace/Pro6Parser/src/files/example/Groß und herrlich.pro6"));
 		String generated = Pro6Tool.generatePro6(pf);
-		System.out.println(XML.toJSONObject(readFile(new File("/home/dominik/eclipse-workspace/Pro6Parser/src/files/example/Groß und herrlich.pro6"))).toString(4));
+		System.out.println(XML.toJSONObject(ConverterAPI.readFile(new File("/home/dominik/eclipse-workspace/Pro6Parser/src/files/example/Groß und herrlich.pro6"))).toString(4));
 		System.out.println("--------------------------------------------------------------------------------------------------------------------------------------------");
 		System.out.println(XML.toJSONObject(generated).toString(4));
 	}

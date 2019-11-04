@@ -4,10 +4,8 @@ import java.awt.Color;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.time.Instant;
 import java.time.ZoneId;
@@ -17,6 +15,8 @@ import javax.swing.text.BadLocationException;
 import javax.swing.text.MutableAttributeSet;
 import javax.swing.text.SimpleAttributeSet;
 import javax.swing.text.StyleConstants;
+
+import org.mozilla.universalchardet.ReaderFactory;
 
 import converter.api.pro6.Dictionary;
 import converter.api.pro6.NSColor;
@@ -73,14 +73,15 @@ public class ConverterAPI {
 	public static final String REFRAIN_CHORUS = "128 0 255 255";
 	public static final String CHOR_SOLO = "170 176 255 255";
 	
-	private static String getCurrentDateTime() {
+	public static String getCurrentDateTime() {
 		// String time = Instant.now().atZone(ZoneId.of("Europe/Berlin")).toString();
 		 String time = Instant.now().atZone(ZoneId.systemDefault()).toString();
 		return time.substring(0, time.indexOf('['));
 	}
 	
 	public static String readFile(File file) throws IOException {
-		BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(file)));
+		// BufferedReader br = new BufferedReader(new FileReader(file));
+		BufferedReader br = ReaderFactory.createBufferedReader(file);
 		String inputLine = "", result = "";
 		while ((inputLine = br.readLine()) != null) {
 			if (result.length() < 1)

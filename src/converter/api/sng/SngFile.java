@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import converter.api.sng.parser.SngTool;
+
 public class SngFile {
 	private List<SngFileProperty> properties = new ArrayList<SngFileProperty>();
 	
@@ -54,21 +56,15 @@ public class SngFile {
 	}
 	
 	public String getAsSng() {
-		String slides = "", result = "";
-		for (SngFileProperty property : this.properties) {
-			if (property.getPropertyName().equalsIgnoreCase("slides"))
-				slides = property.getPropertyValue();
-			else
-				result += "#" + property.getPropertyName() + "=" + property.getPropertyValue() + "\n";
-		}
-		if (result.length() < 1)
-			result = slides;
-		else
-			result += "---\n" + slides;
-		return result.trim();
+		return SngTool.generateSng(this);
 	}
 	
 	public void printAsSng() {
 		System.out.println(this.getAsSng());
+	}
+	
+	@Override
+	public String toString() {
+		return this.getAsSng();
 	}
 }
